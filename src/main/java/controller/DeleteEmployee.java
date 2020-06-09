@@ -1,3 +1,8 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package controller;
 
 import dao.EmployeeDb;
@@ -7,15 +12,19 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
-@WebServlet(name = "UpdateEmployee", urlPatterns = {"/update-employee"})
-public class UpdateEmployee extends HttpServlet {
+/**
+ *
+ * @author mihail
+ */
+@WebServlet(name = "DeleteEmployee", urlPatterns = {"/delete-employee"})
+public class DeleteEmployee extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -25,46 +34,40 @@ public class UpdateEmployee extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet UpdateEmployee</title>");            
+            out.println("<title>Servlet DeleteEmployee</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet UpdateEmployee at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet DeleteEmployee at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
     }
 
+    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
+    /**
+     * Handles the HTTP <code>GET</code> method.
+     *
+     * @param request servlet request
+     * @param response servlet response
+     * @throws ServletException if a servlet-specific error occurs
+     * @throws IOException if an I/O error occurs
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         EmployeeDb employeeDb = new EmployeeDb();
-        HttpSession session = request.getSession();
-        session.setAttribute("contactById", employeeDb.get(request.getParameter("id"), 1));
-        response.sendRedirect("update.jsp");
+        Map<Integer,Employee> map = employeeDb.get(request.getParameter("id"), 1);
+        Employee employee = map.get(Integer.parseInt(request.getParameter("id")));
+        employeeDb.delete(employee);
+        response.sendRedirect("view");
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        EmployeeDb employeeDb = new EmployeeDb();
-        String id = request.getParameter("id");
-        String name = request.getParameter("name");
-        String surname = request.getParameter("surname");
-        String salary = request.getParameter("salary");
-        String hireday = request.getParameter("hireday");
-        String birthday = request.getParameter("birthday");
-        String genderStr = request.getParameter("gender");
-        Gender gender;
-        try {
-            gender = Gender.valueOfIgnoreCase(genderStr);
-        } catch (IllegalArgumentException e) {
-            gender = Gender.valueOf(genderStr);
-        }
-        Employee employee = new Employee(Integer.parseInt(id),name,surname,Double.parseDouble(salary),LocalDate.parse(hireday,formatter),LocalDate.parse(birthday,formatter),gender);
-        employeeDb.update(employee);
-        response.sendRedirect("view");
+        processRequest(request, response);
     }
+
 
     @Override
     public String getServletInfo() {

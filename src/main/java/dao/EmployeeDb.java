@@ -7,6 +7,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -106,7 +107,7 @@ public class EmployeeDb{
     return null;
   }
   
-  public void update(Employee emp){
+  public int update(Employee emp){
   
     String sql = "update postgres.employee set idnp=?, nume=?, prenume=?, sarariu=?, data_ang=?, data_nast=?, gen=? where id=?";
     try(Connection conn = ConnectionDb.initConnection();
@@ -121,13 +122,61 @@ public class EmployeeDb{
        statement.setInt(8,emp.getId());
        int affectedRows = statement.executeUpdate();
        System.out.println(String.format("Executed update statement. Affected %d rows", affectedRows));
-       //return affectedRows;          
+       return affectedRows;          
         
     }catch(SQLException ex){
       System.out.println("ERROR! Update failed. " + ex.getMessage());
       ex.printStackTrace();
     }
-    //return -1;
+    return -1;
+  }
+  
+  public int insert(Employee emp) {
+     String sql = "insert into postgres.employee(idnp,nume,prenume,sarariu,data_ang,data_nast,gen)"
+                //+ "values(?,?,?,?,?,?,?)";
+                + "values(nextval('postgres.employee_idnp_seq'),?,?,?,?,?,?)";     
+    
+    try(Connection conn = ConnectionDb.initConnection();
+        PreparedStatement statement = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS)){
+        
+        //statement.setInt   (1, emp.getIdnp());
+        statement.setString(1, emp.getName());
+        statement.setString(2, emp.getSurName());
+        statement.setDouble(3, emp.getSalary());
+        statement.setDate  (4, Date.valueOf(emp.getHireDay()));
+        statement.setDate  (5, Date.valueOf(emp.getBirthDay()));
+        statement.setInt   (6, emp.getGender().ordinal());
+        int affectedRows = statement.executeUpdate();
+        if(affectedRows>0){
+          ResultSet rsVal=statement.getGeneratedKeys();
+          rsVal.next();
+          emp.setId(rsVal.getInt(1));
+          emp.setIdnp(rsVal.getInt(2));
+        }
+        //System.out.println("Inserted" + rows + " rows"); 
+        System.out.println(String.format("Executed insert statement. Affected %d rows", affectedRows));
+        return affectedRows;
+    } catch(SQLException ex){
+      System.out.println("ERROR! Insert failed. " + ex.getMessage());
+      ex.printStackTrace();
+    } 
+    return -1;
+  } 
+  
+  public int delete(Employee emp){
+    String sql = "delete from postgres.employee where id=?";
+    //System.out.println("emp.getId()="+emp.getName());
+    try(Connection conn = ConnectionDb.initConnection();
+      PreparedStatement statement = conn.prepareStatement(sql)){
+      statement.setInt(1,emp.getId());
+      int affectedRows = statement.executeUpdate();
+      System.out.println(String.format("Executed delete statement. Affected %d rows", affectedRows));
+      return affectedRows;    
+    
+    }catch(SQLException ex){
+      System.out.println("ERROR! Delete failed. " + ex.getMessage());
+    }
+    return -1;
   }
   
 }
